@@ -14,7 +14,11 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@web3-chat-app/chat-controller": [
+        "packages/chat-controller/src/index.ts"
+      ]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }
