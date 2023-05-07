@@ -1,6 +1,12 @@
 import { AppProps } from 'next/app';
 import Head from 'next/head';
-import './styles.css';
+import { DAppProvider } from '@usedapp/core';
+import { Roboto } from '@next/font/google';
+
+const roboto = Roboto({
+  weight: '400',
+  subsets: ['latin'],
+});
 
 function CustomApp({ Component, pageProps }: AppProps) {
   return (
@@ -8,8 +14,10 @@ function CustomApp({ Component, pageProps }: AppProps) {
       <Head>
         <title>Welcome to chat-app-interface!</title>
       </Head>
-      <main className="app">
-        <Component {...pageProps} />
+      <main className={roboto.className}>
+        <DAppProvider config={{}}>
+          <Component {...pageProps} />
+        </DAppProvider>
       </main>
     </>
   );
