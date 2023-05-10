@@ -1,32 +1,48 @@
-import { useEffect } from 'react';
-import styled from '@emotion/styled';
+import { useContext, useEffect, useState } from 'react';
 import { useEthers } from '@usedapp/core';
 import { useRouter } from 'next/router';
+import { Client } from '@xmtp/xmtp-js';
 
+import { Context } from '../context/state';
+import { getSigner } from '../utils/signer';
+
+import Page from '../components/styled/Page';
 import Button from '../components/styled/Button';
-
-const StyledPage = styled.div`
-  width: 100vw
-  height: 100vh
-
-  .button {
-
-  }
-`;
+import { ActionTypes } from '../context/types';
 
 export function Index() {
   const { activateBrowserWallet, account } = useEthers();
   const router = useRouter();
+  const { dispatch } = useContext(Context);
+  const [isLoading, setLoadingState] = useState(false);
 
   useEffect(() => {
     if (account) {
-      router.push('/home');
+      const connectToClient = async () => {
+        setLoadingState(true);
+        const signer = await getSigner();
+        const xmtp = await Client.create(signer);
+        const conversations = await xmtp.conversations.list();
+        dispatch({
+          type: ActionTypes.SET_STATE,
+          data: {
+            client: xmtp,
+            conversations,
+          },
+        });
+        setLoadingState(false);
+        router.push('/home');
+      };
+      connectToClient();
     }
-  }, [account, router]);
+  }, [account, router, dispatch]);
   return (
-    <StyledPage>
-      <Button onClick={() => activateBrowserWallet()}>Authenticate</Button>
-    </StyledPage>
+    <Page>
+      {isLoading && <div>Loading...</div>}
+      {!isLoading && (
+        <Button onClick={() => activateBrowserWallet()}>Connect To App</Button>
+      )}
+    </Page>
   );
 }
 
