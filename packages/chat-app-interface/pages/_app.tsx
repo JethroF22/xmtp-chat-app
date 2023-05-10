@@ -7,6 +7,8 @@ import { Roboto } from '@next/font/google';
 import { appReducer } from '../context/reducer';
 import { Context } from '../context/state';
 
+import './styles.css';
+
 const roboto = Roboto({
   weight: '400',
   subsets: ['latin'],
