@@ -1,10 +1,8 @@
-import { Conversation } from '@xmtp/xmtp-js';
+import { useContext } from 'react';
 import styled from '@emotion/styled';
 
-interface Props {
-  conversations: Conversation[];
-  setAddress: (address: string) => void;
-}
+import { Context } from '../context/state';
+import { ActionTypes } from '../context/types';
 
 const StyledDiv = styled.div`
   width: 25%;
@@ -41,7 +39,20 @@ const StyledDiv = styled.div`
   }
 `;
 
-function Sidebar({ conversations, setAddress }: Props) {
+function Sidebar() {
+  const {
+    state: { conversations },
+    dispatch,
+  } = useContext(Context);
+
+  const setAddress = (address: string) => {
+    dispatch({
+      type: ActionTypes.UPDATE_STATE,
+      key: 'selectedAddress',
+      data: address,
+    });
+  };
+
   return (
     <StyledDiv>
       <h3>Contacts</h3>
