@@ -9,6 +9,7 @@ export interface AppContext {
 export interface AppState {
   client: Client | null;
   conversations: Conversation[];
+  selectedAddress: string;
 }
 
 export enum ActionTypes {
