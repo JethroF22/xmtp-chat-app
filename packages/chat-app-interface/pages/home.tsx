@@ -1,40 +1,36 @@
-import { useEffect, useState } from 'react';
+import { useContext, useEffect } from 'react';
 import { useEthers } from '@usedapp/core';
-import { Client, Conversation, DecodedMessage } from '@xmtp/xmtp-js';
 import { useRouter } from 'next/router';
-import { useForm } from 'react-hook-form';
-import { getSigner } from '../utils/signer';
+import styled from '@emotion/styled';
 
-import Button from '../components/styled/Button';
+import { Context } from '../context/state';
+
 import Chat from '../components/Chat';
+import Sidebar from '../components/Sidebar';
+
+const Container = styled.div`
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+
+  .no-message-display {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    color: #fff;
+  }
+`;
 
 export function Home() {
   const { account } = useEthers();
   const router = useRouter();
-  const [isLoading, setLoadingState] = useState(false);
-  const [conversation, setConversation] = useState<Conversation>();
-  const [messages, setMessages] = useState<DecodedMessage[]>([]);
-  const [peerAddress, setPeerAddress] = useState<string>();
   const {
-    register,
-    formState: { errors },
-    handleSubmit,
-  } = useForm();
-  const onSubmit = async (formState: any) => {
-    setLoadingState(true);
-    setPeerAddress(formState.peerAddress);
-
-    const signer = await getSigner();
-    const xmtp = await Client.create(signer);
-    const conversation = await xmtp.conversations.newConversation(
-      formState.peerAddress
-    );
-    const messages = await conversation.messages();
-    setConversation(conversation);
-    setMessages(messages || []);
-
-    setLoadingState(false);
-  };
+    state: { selectedAddress },
+  } = useContext(Context);
 
   useEffect(() => {
     if (!account) {
@@ -42,41 +38,16 @@ export function Home() {
     }
   }, []);
 
-  useEffect(() => {
-    if (peerAddress) {
-      const streamMessages = async () => {
-        const newStream = await conversation?.streamMessages();
-        for await (const msg of newStream || []) {
-          setMessages((prevMessages) => [...prevMessages, msg]);
-        }
-      };
-      streamMessages();
-    }
-  }, [conversation, peerAddress]);
-
   return (
-    <div>
-      {!peerAddress && !isLoading && (
-        <div>
-          <div>
-            <input
-              type="text"
-              placeholder="Peer Address"
-              {...register('peerAddress')}
-            />
-          </div>
-          <Button onClick={handleSubmit(onSubmit)}>Set Peer Address</Button>
+    <Container>
+      <Sidebar />
+      {selectedAddress && <Chat conversationPartner={selectedAddress} />}
+      {!selectedAddress && (
+        <div className="no-message-display">
+          Select a conversation to get started
         </div>
       )}
-      {peerAddress && isLoading && <div>Loading...</div>}
-      {peerAddress && conversation && (
-        <Chat
-          account={account as string}
-          messages={messages}
-          conversation={conversation as Conversation}
-        />
-      )}
-    </div>
+    </Container>
   );
 }
 

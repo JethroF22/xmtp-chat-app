@@ -9,9 +9,10 @@ import { Conversation, DecodedMessage, Stream } from '@xmtp/xmtp-js';
 import styled from '@emotion/styled';
 
 import { Context } from '../context/state';
+import Messages from './Messages';
 
 interface Props {
-  account: string;
+  conversationPartner: string;
 }
 
 const StyledDiv = styled.div`
@@ -87,7 +88,7 @@ const StyledDiv = styled.div`
   }
 `;
 
-function Chat({ account }: Props) {
+function Chat({ conversationPartner }: Props) {
   const {
     state: { client, selectedAddress },
   } = useContext(Context);
@@ -161,24 +162,15 @@ function Chat({ account }: Props) {
     };
   }, [conversation]);
 
-  const formatMessageTag = (senderAddress: string) => {
-    return senderAddress === account ? `${senderAddress}: ` : 'Me: ';
-  };
-
   return (
     <StyledDiv>
       {isLoading && <div>Loading...</div>}
       {!isLoading && (
         <>
-          <div className="messages">
-            {messages.length === 0 && <div>No messages to display</div>}
-            {messages.length > 0 &&
-              messages.map((message) => (
-                <div key={message.id}>
-                  {formatMessageTag(message.senderAddress)} {message.content}
-                </div>
-              ))}
-          </div>
+          <Messages
+            messages={messages}
+            conversationPartner={conversationPartner}
+          />
           <div className="message-form">
             <div className="message-input" onKeyUp={keyUpHandler}>
               <input
