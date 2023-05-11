@@ -1,11 +1,14 @@
-import { useContext, useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { DecodedMessage, Conversation } from '@xmtp/xmtp-js';
+import {
+  ChangeEvent,
+  KeyboardEvent,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
+import { Conversation, DecodedMessage, Stream } from '@xmtp/xmtp-js';
 import styled from '@emotion/styled';
 
 import { Context } from '../context/state';
-
-import Button from './styled/Button';
 
 interface Props {
   account: string;
@@ -21,11 +24,10 @@ const StyledDiv = styled.div`
   align-items: flex-start;
   justify-content: left;
 
-  div {
-  }
-
   .messages {
     height: 90%;
+    width: 100%;
+    overflow-y: auto;
     padding: 10px;
   }
 
@@ -35,13 +37,14 @@ const StyledDiv = styled.div`
     width: 100%;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: left;
 
     .message-input {
       height: 80%;
-      width: 90%;
+      width: 85%;
       display: flex;
       align-items: center;
+      justify-content: center;
 
       input {
         -webkit-appearance: none;
@@ -49,7 +52,7 @@ const StyledDiv = styled.div`
         -moz-appearance: none;
         appearance: none;
         border: none;
-        height: 80%;
+        height: 90%;
         width: 90%;
         background-color: #2c4555;
         color: #fff;
@@ -64,33 +67,59 @@ const StyledDiv = styled.div`
     }
 
     .send-button {
+      height: 70%;
+      width: 15%;
+      cursor: pointer;
+      background-color: #629ff7;
+      border: 1px solid #629ff7;
+      border-radius: 5px;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .send-button-disabled {
+      background-color: #2c4555;
+      border: 1px solid #2c4555;
+      cursor: none;
     }
   }
 `;
 
 function Chat({ account }: Props) {
   const {
-    register,
-    formState: { errors },
-    handleSubmit,
-  } = useForm();
-  const {
     state: { client, selectedAddress },
   } = useContext(Context);
   const [isLoading, setLoadingState] = useState(false);
   const [sendingMessage, setMessageSendingState] = useState(false);
+  const [message, setMessage] = useState('');
   const [conversation, setConversation] = useState<Conversation>();
   const [messages, setMessages] = useState<DecodedMessage[]>([]);
-  const onSubmit = async (formState: any) => {
-    try {
-      setMessageSendingState(true);
-      await conversation?.send(formState.message);
-    } catch (error) {
-      console.log('error');
-      console.log(error);
-    } finally {
-      setMessageSendingState(false);
+  const sendMessage = async () => {
+    if (!sendingMessage && message.length > 0) {
+      try {
+        setMessageSendingState(true);
+        await conversation?.send(message);
+        setMessage('');
+      } catch (error) {
+        console.log('error');
+        console.log(error);
+      } finally {
+        setMessageSendingState(false);
+      }
     }
+  };
+
+  const keyUpHandler = async (event: KeyboardEvent) => {
+    if (event.key === 'Enter') {
+      await sendMessage();
+    }
+  };
+
+  const onChangeHandler = (event: ChangeEvent<HTMLInputElement>) => {
+    const message = event.target.value;
+    setMessage(message);
   };
 
   useEffect(() => {
@@ -116,19 +145,24 @@ function Chat({ account }: Props) {
   }, []);
 
   useEffect(() => {
+    let stream: Stream<DecodedMessage>;
     if (conversation) {
       const streamMessages = async () => {
-        const newStream = await conversation?.streamMessages();
-        for await (const msg of newStream || []) {
+        stream = await conversation?.streamMessages();
+        for await (const msg of stream || []) {
           setMessages((prevMessages) => [...prevMessages, msg]);
         }
       };
       streamMessages();
     }
+
+    return () => {
+      stream?.return();
+    };
   }, [conversation]);
 
   const formatMessageTag = (senderAddress: string) => {
-    return senderAddress === account ? 'Me: ' : `${senderAddress}: `;
+    return senderAddress === account ? `${senderAddress}: ` : 'Me: ';
   };
 
   return (
@@ -146,17 +180,22 @@ function Chat({ account }: Props) {
               ))}
           </div>
           <div className="message-form">
-            <div className="message-input">
+            <div className="message-input" onKeyUp={keyUpHandler}>
               <input
                 type="text"
                 placeholder="Message"
-                {...register('message')}
+                onChange={onChangeHandler}
+                value={message}
               />
             </div>
             {!sendingMessage && (
-              <Button onClick={handleSubmit(onSubmit)}>Send Message</Button>
+              <div className="send-button" onClick={sendMessage}>
+                Send Message
+              </div>
             )}
-            {sendingMessage && <div>Sending Message...</div>}
+            {sendingMessage && (
+              <div className="send-button send-button-disabled">Sending...</div>
+            )}
           </div>
         </>
       )}
