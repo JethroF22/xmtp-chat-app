@@ -5,7 +5,7 @@ import { Context } from '../context/state';
 import { ActionTypes } from '../context/types';
 
 const StyledDiv = styled.div`
-  width: 25%;
+  width: 30%;
   height: 100%;
   color: #fff;
   border-right: 1px solid #fff;
@@ -30,11 +30,12 @@ const StyledDiv = styled.div`
     padding-left: 10px;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: center;
     cursor: pointer;
   }
 
-  .list-item:hover {
+  .list-item:hover,
+  .selected {
     background-color: #202c33;
     border-radius: 5px;
   }
@@ -42,7 +43,7 @@ const StyledDiv = styled.div`
 
 function Sidebar() {
   const {
-    state: { conversations },
+    state: { conversations, selectedAddress },
     dispatch,
   } = useContext(Context);
 
@@ -59,10 +60,16 @@ function Sidebar() {
       <h3>Contacts</h3>
       <div className="contact-list">
         {conversations.map((conversation) => (
-          <div className="list-item" key={conversation.topic}>
-            <div onClick={() => setAddress(conversation.peerAddress)}>
-              {conversation.peerAddress}
-            </div>
+          <div
+            className={
+              conversation.peerAddress === selectedAddress
+                ? 'list-item selected'
+                : 'list-item'
+            }
+            key={conversation.topic}
+            onClick={() => setAddress(conversation.peerAddress)}
+          >
+            {conversation.peerAddress}
           </div>
         ))}
       </div>

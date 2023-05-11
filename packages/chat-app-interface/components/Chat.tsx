@@ -11,10 +11,6 @@ import styled from '@emotion/styled';
 import { Context } from '../context/state';
 import Messages from './Messages';
 
-interface Props {
-  conversationPartner: string;
-}
-
 const StyledDiv = styled.div`
   color: #fff;
   height: 100%;
@@ -24,17 +20,10 @@ const StyledDiv = styled.div`
   flex-direction: column;
   align-items: flex-start;
   justify-content: left;
-
-  .messages {
-    height: 90%;
-    width: 100%;
-    overflow-y: auto;
-    padding: 10px;
-  }
+  padding: 20px 10px;
 
   .message-form {
-    padding: 10px;
-    height: 10%;
+    height: 8%;
     width: 100%;
     display: flex;
     align-items: center;
@@ -54,7 +43,7 @@ const StyledDiv = styled.div`
         appearance: none;
         border: none;
         height: 90%;
-        width: 90%;
+        width: 95%;
         background-color: #2c4555;
         color: #fff;
         border-radius: 5px;
@@ -88,7 +77,7 @@ const StyledDiv = styled.div`
   }
 `;
 
-function Chat({ conversationPartner }: Props) {
+function Chat() {
   const {
     state: { client, selectedAddress },
   } = useContext(Context);
@@ -167,10 +156,7 @@ function Chat({ conversationPartner }: Props) {
       {isLoading && <div>Loading...</div>}
       {!isLoading && (
         <>
-          <Messages
-            messages={messages}
-            conversationPartner={conversationPartner}
-          />
+          <Messages messages={messages} conversationPartner={selectedAddress} />
           <div className="message-form">
             <div className="message-input" onKeyUp={keyUpHandler}>
               <input
@@ -178,6 +164,7 @@ function Chat({ conversationPartner }: Props) {
                 placeholder="Message"
                 onChange={onChangeHandler}
                 value={message}
+                disabled={sendingMessage ? true : false}
               />
             </div>
             {!sendingMessage && (
